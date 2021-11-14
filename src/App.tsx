@@ -20,18 +20,31 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
+  BarChart,
+  Bar,
 } from "recharts";
 import { render } from "@testing-library/react";
 
+const hashCode = function(s:string) {
+  var hash = 0, i, chr;
+  if (s.length === 0) return hash;
+  for (i = 0; i < s.length; i++) {
+    chr   = s.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+};
+
 function DrawInputCharts({
-  currentResponse,
+  currentRequest,
 }: {
-  currentResponse: ServerRequest | null;
+  currentRequest: ServerRequest | null;
 }) {
-  if (currentResponse === null) {
+  if (currentRequest === null) {
     return null;
   }
-  console.log({currentResponse})
+
   return (
     <LineChart
       width={1000}
@@ -49,13 +62,13 @@ function DrawInputCharts({
       <YAxis dataKey="dollarsPerDay"  type="number"/>
       <Tooltip />
       <Legend />
-      {currentResponse.operations.map(({ name, revenueStructure}) => (
+      {currentRequest.operations.map(({id, name, revenueStructure}) => (
         <Line
           type="monotone"
           name={name}
           data={revenueStructure}
           dataKey="dollarsPerDay"
-          stroke="#name.hashcode()"
+          stroke={"#" + hashCode(id)}
         />
       ))}
     </LineChart>
@@ -91,15 +104,54 @@ function DrawInputCharts({
 }
 
 function DrawOutputCharts({
-  currentResponse,
+  currentResult,
 }: {
-  currentResponse: ServerResponse | null;
-}) {
-  if (currentResponse === null) {
+  currentResult: ServerResponse | null;
+}
+) {
+  if (currentResult === null) {
     return null;
   }
 
-  return null;
+  const data = [
+    {
+      name: 'Incremental Rev',
+      value: currentResult.incrementalRevenue,
+    },
+    {
+      name: 'Revenue Per Day',
+      value: currentResult.revenuePerDay,
+    },
+    {
+      name: 'Flow rate-in',
+      value: currentResult.flowRateIn,
+    },
+    {
+      name: 'Flow rate-out',
+      value: currentResult.flowRateToOperations,
+    },
+  ]
+  return (
+    <BarChart
+          width={1000}
+          height={500}
+          data={data}
+          margin={{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}
+        >
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="name" />
+    <YAxis />
+    <Tooltip />
+    <Legend />
+    <Bar dataKey="name" fill="#8884d8" />
+    <Bar dataKey="value" fill="#82ca9d" />
+  </BarChart>
+  );
 }
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -170,7 +222,8 @@ function App() {
         </Toolbar>
       </AppBar>
 
-      <DrawInputCharts currentResponse={request} />
+      <DrawInputCharts currentRequest={request} />
+      <DrawOutputCharts currentResult={result} />
     </div>
   );
 }
