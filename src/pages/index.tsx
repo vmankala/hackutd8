@@ -1,14 +1,17 @@
-import AppBar from "@material-ui/core/AppBar";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
-import Toolbar from "@material-ui/core/Toolbar";
-import Typography from "@material-ui/core/Typography";
+import Head from 'next/head';
+import { Box, Container, Grid } from '@mui/material';
+import { Profit } from '../components/dashboard/profit';
+import { PitVolume } from '../components/dashboard/pit-volume';
+import { TotalFlow } from '../components/dashboard/total-flow';
+import { Status } from '../components/dashboard/status';
+import { DashboardLayout } from '../components/dashboard-layout';
 import React from "react";
 import {
   ClientResponse,
   processRequest,
   ServerRequest,
   ServerResponse,
-} from "./optimization";
+} from "../optimization";
 import {
   LineChart,
   Line,
@@ -23,7 +26,6 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { render } from "@testing-library/react";
 
 function lazyGetColor(str: string): string {
   var hash = 0;
@@ -70,38 +72,11 @@ function DrawInputCharts({
           data={revenueStructure}
           dataKey="dollarsPerDay"
           stroke={lazyGetColor(name)}
+          key={name}
         />
       ))}
     </LineChart>
   );
-  // return (
-  //   <>
-  //   {currentOperations.map(ele => {
-  //     const data = ele.revenueStructure;
-  //     return  (<><h2>{ele.name}</h2><LineChart
-  //     width={1000}
-  //     height={500}
-  //     data={data}
-  //     margin={{
-  //       top: 5,
-  //       right: 30,
-  //       left: 20,
-  //       bottom: 5,
-  //     }}
-  //   >
-  //     <CartesianGrid strokeDasharray="3 3" />
-  //     <XAxis dataKey="flowPerDay" />
-  //     <YAxis dataKey="dollarsPerDay"/>
-  //     <Tooltip />
-  //     <Legend />
-  //     <Line type="monotone" dataKey="dollarsPerDay" stroke="#8884d8" activeDot={{ r: 8 }} />
-  //   </LineChart></>
-  //     )
-  //   }
-  //   )
-  // }
-  // </>
-  // )
 }
 
 function DrawOutputCharts({
@@ -155,21 +130,7 @@ function DrawOutputCharts({
   );
 }
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    title: {
-      flexGrow: 1,
-      textAlign: "left",
-    },
-    body: {
-      padding: theme.spacing(2),
-    },
-  })
-);
-
-function App() {
-  const classes = useStyles();
-
+function Dashboard() {
   const [request, setRequest] = React.useState<null | ServerRequest>(null);
   const [result, setResult] = React.useState<null | ServerResponse>(null);
   const [response, setResponse] = React.useState<null | ClientResponse>(null);
@@ -212,21 +173,74 @@ function App() {
       ws.close();
     };
   }, []);
-
   return (
-    <div>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h5" className={classes.title}>
-            Pipeline Network Optimizer
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      <DrawInputCharts currentRequest={request} />
-      <DrawOutputCharts currentResult={result} />
-    </div>
+    <>
+      <Head>
+        <title>
+          Flow Network Optimization
+        </title>
+      </Head>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          py: 8
+        }}
+      >
+        <Container maxWidth={false}>
+          <Grid
+            container
+            spacing={3}
+          >
+            <Grid
+              item
+              xl={1}
+              lg={1}
+              sm={3}
+              xs={6}
+            >
+            </Grid>
+            <Grid
+              item
+              lg={3}
+              sm={6}
+              xl={3}
+              xs={12}
+            >
+              <Profit num={result?.revenuePerDay} />
+            </Grid>
+            <Grid
+              item
+              xl={3}
+              lg={3}
+              sm={6}
+              xs={12}
+            >
+              <TotalFlow num={request?.flowRateIn} />
+            </Grid>
+            <Grid
+              item
+              xl={3}
+              lg={3}
+              sm={6}
+              xs={12}
+            >
+              <PitVolume num={0} />
+            </Grid>
+            <br/>
+            <DrawInputCharts currentRequest={request} />
+            <DrawOutputCharts currentResult={result} />
+          </Grid>
+        </Container>
+      </Box>
+    </>
   );
-}
+};
 
-export default App;
+Dashboard.getLayout = (page: any) => (
+  <DashboardLayout>
+    {page}
+  </DashboardLayout>
+);
+
+export default Dashboard;
