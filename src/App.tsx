@@ -7,7 +7,6 @@ import { ClientResponse, processRequest, ServerRequest, ServerResponse } from '.
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { render } from '@testing-library/react';
 
-
 function DrawInputCharts(currentRequest: ServerRequest | null) {
   if(currentRequest === null) {
     return
@@ -33,7 +32,7 @@ function DrawInputCharts(currentRequest: ServerRequest | null) {
     render(
     <LineChart
           width={1000}
-          height={300}
+          height={500}
           data={data}
           margin={{
             top: 5,
@@ -43,11 +42,11 @@ function DrawInputCharts(currentRequest: ServerRequest | null) {
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="data.flowPerDay" />
-          <YAxis />
+          <XAxis dataKey="flowPerDay" />
+          <YAxis dataKey="dollarsPerDay"/>
           <Tooltip />
           <Legend />
-          <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
+          <Line type="monotone" dataKey="dollarsPerDay" stroke="#8884d8" activeDot={{ r: 8 }} />
         </LineChart>
     )
   }
@@ -78,7 +77,7 @@ function App() {
     const ws = new WebSocket(`wss://2021-utd-hackathon.azurewebsites.net`);
 
     ws.addEventListener('open', () => {
-      ws.send(JSON.stringify({setPitCapacity: 100000}));
+      ws.send(JSON.stringify({setPitCapacity: 10000000}));
     })
 
     // When the server sends new data, we send how to optimally allocate the water
@@ -92,7 +91,7 @@ function App() {
       if (data.type === "CURRENT_STATE") {
         const request: ServerRequest = JSON.parse(message.data);
         setRequest(request);
-        DrawInputCharts(request);
+        DrawInputCharts(request); 
         const response = processRequest(request)
         setResponse(response)
         ws.send(JSON.stringify(response));
@@ -112,11 +111,7 @@ function App() {
       ws.close();
     }
   }, [])
-
-  
-
   return(
-
     <div>
      <AppBar position="static">
         <Toolbar>
@@ -125,6 +120,7 @@ function App() {
           </Typography>
         </Toolbar>
       </AppBar>
+      
         <div>1.) Server Sends Current State of the System:</div>
         <textarea rows={10} cols={150} value={JSON.stringify(request, undefined, 2)} />
         <div>2.) Client Sends Solution to the Optimization:</div>
