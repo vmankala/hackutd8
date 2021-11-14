@@ -25,17 +25,18 @@ import {
 } from "recharts";
 import { render } from "@testing-library/react";
 
-const hashCode = function(s:string) {
-  var hash = 0, i, chr;
-  if (s.length === 0) return hash;
-  for (i = 0; i < s.length; i++) {
-    chr   = s.charCodeAt(i);
-    hash  = ((hash << 5) - hash) + chr;
-    hash |= 0; // Convert to 32bit integer
+function lazyGetColor(str: string): string {
+  var hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return hash;
-};
-
+  var colour = '#';
+  for (let i = 0; i < 3; i++) {
+    var value = (hash >> (i * 8)) & 0xff;
+    colour += ('00' + value.toString(16)).substr(-2);
+  }
+  return colour;
+}
 function DrawInputCharts({
   currentRequest,
 }: {
@@ -62,13 +63,13 @@ function DrawInputCharts({
       <YAxis dataKey="dollarsPerDay"  type="number"/>
       <Tooltip />
       <Legend />
-      {currentRequest.operations.map(({id, name, revenueStructure}) => (
+      {currentRequest.operations.map(({ name, revenueStructure}) => (
         <Line
           type="monotone"
           name={name}
           data={revenueStructure}
           dataKey="dollarsPerDay"
-          stroke={"#" + hashCode(id)}
+          stroke={lazyGetColor(name)}
         />
       ))}
     </LineChart>
